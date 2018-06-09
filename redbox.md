@@ -1,8 +1,8 @@
 hello，大家好，我们直接切入正题，今天来讨论一下如何使用red语言制作一款简单的推箱子游戏。
 首先，我们来看下推箱子游戏。
 1.看完之后想必大家以及对这个游戏有个大致的了解了。那么好的，我们开始进入准备环节，俗话说得好，巧妇难为无米之炊。我们接下来的准备工作便是选好关卡地图的设置文件以及人物的动作图片，墙，地，目标位置，箱子的图片。
-    load-bin: func [file][reduce bind load load decompress read/binary file 'self]
-    maps: load-bin %data1.txt.gz
+'''load-bin: func [file][reduce bind load load decompress read/binary file 'self]
+maps: load-bin %data1.txt.gz'''
 2.好，接下来我们就开始制作游戏了，在做游戏的过程中我们应该在大脑中有个具体的思路（第一步做什么，接下来做什么，之后做什么），很明显，我们首先应该做的就是绘制地图。
 3.ok，通过上面的步骤我们已经可以看到地图已经出现了，那么我们此时可以加入小人了，从图片中抽取出小人的编码后将其显示在地图上。
 4.小人成功上图，此时应该是建立小人和键盘之间的联系，即使用上下左右键控制小人的移动。
