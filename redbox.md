@@ -65,25 +65,205 @@ draw-map: has [tile lx ly][
 		]
 	]
 ```
-以上draw-map方法，主要思路是通过读取从第一步骤中得到的地图信息中具体的关卡信息存在level-data中，再初始化一块背景图片（这里是黑色的），使用for-pair方法循环地将小的图片（通过1.2中extrat得到的图片），这里指的主要是构成地图的墙，地板，目标图片。替换掉map-img图片相应坐标的图片，最后画出了地图。现在你可以看到绘制的地图如下所示：
+以上draw-map方法，主要思路是通过读取从第一步骤中得到的地图信息中具体的关卡信息存在level-data中，再初始化一块背景图片（这里是黑色的），使用for-pair方法
+```
+for-pair: function [
+		'word 	[word!]
+		start 	[pair!] 
+		end 	[pair!] 
+		body 	[block!] 
+		/local
+		do-body
+		val 
+	][
+		do-body: func reduce [word] body
+		val: start 
+		while [val/y <= end/y][
+			val/x: start/x
+			while [val/x <= end/x][
+				do-body val 
+				val/x: val/x + 1 
+			]
+			val/y: val/y + 1
+		]
+	]
+
+```
+
+循环地将小的图片（通过1.2中extrat得到的图片），这里指的主要是构成地图的墙，地板，目标图片。替换掉map-img图片相应坐标的图片，具体的思路是使用tile-type？方法对每次循环对应的坐标类型进行判断。
+```
+tile-type?: function [pos [pair!]][
+		pos: pos + 1x1
+		to-integer pick pick level-data/map pos/y pos/x
+	]
+```
+之后使用change-image方法将我们选择到的小图片（或是墙或是地板或是目标）覆盖掉大图片（draw-map中的map-img）中具体坐标的地方（实现思路现阶段是将小图片(30x30)的像素点通过循环“刻画”到大图片上）。
+```
+change-image: function [src [image!] dst [image!] pos [pair!]][
+		sx: src/size/x
+		dx: dst/size/x 
+		sy: src/size/y
+		px: pos/x
+		py: pos/y	
+		repeat y sy [
+			xs: y - 1 * sx  + 1 
+			xd: y + py - 1 * dx  + 1 + px 
+			repeat l sx [
+				dst/:xd: src/:xs
+				xd: xd + 1
+				xs: xs + 1
+			] 
+		]
+	]
+```
 
 # 3 
-ok，通过上面的步骤我们已经可以看到地图已经出现了，那么我们此时可以加入小人了，从图片中抽取出小人的编码后将其显示在地图上。
+ok，通过上面的步骤我们已经可以看到地图已经出现了，那么我们此时可以加入小人了，从图片中抽取出小人的编码后将其显示在地图上。(因为小人的初始位置和地图相关，故而我们可以将以下位置添加到上面的2中的draw-map方法中)。	
 ```
 man-pos: undo-man: mad-man/offset: level-data/start * 30 + 0x20
 ```
+而这只是一个坐标，我们要想将小人显示在地图上还需要创建一个类型为window名为box-world的对象，并将map-img和mad-man作为box-world的儿子放入其中。这样我们就能在地图上看到小人了：
+
 # 4 
-小人成功上图，此时应该是建立小人和键盘之间的联系，即使用上下左右键控制小人的移动。
+小人成功上图，此时应该是建立小人和键盘之间的联系，即使用上下左右键控制小人的移动。此时应该设置好box-world中actors属性，如下代码所示：
+```
+box-world/actors: make object! [
+    on-key-down: func [face [object!] event [event!]][
+        switch event/key [
+            up [turn 'up]
+            down [turn 'down]
+            left [turn 'left]
+            right [turn 'right]
+        ]
+    ]
+	]
+```
+现在我们已经实现了判断键盘中上下左右键，此时应该加入对应的turn方法：
+```
+turn: function [value [word!] /local box c-pos b-pos][
+		c-pos: mad-man/offset + dir-to-pos value
+		if can-move? value [
+			;--some function
+		]
+	]
+dir-to-pos: func [value [word!]][
+		select [up 0x-30 down 0x30 left -30x0 right 30x0] value
+	]
+```
+以上turn方法中预留了小人移动逻辑的代码（如5中所提到的）。
+现在我们可以看到小人在地图上自由的穿梭了：（gif）
 # 5
 可以看到小人以及能够在图上自由的移动了，那么接下来我们应该思考小人在地图上的移动是不是有限制的呢？答案是肯定的，小人在遇到墙体的时候是不能移动的。
+```
+can-move?: func [value [word!] pos [pair!]/local new1 new nx ny][
+		new1: pos - 0x16 + dir-to-pos value 
+		nx: new1/x / 30
+		ny: new1/y / 30
+		new1: as-pair nx ny
+		new: tile-type? new1 
+		find [2 3] new 
+	]
+```
+以上代码是首先得到小人下一步的位置（即操作键盘后理论上小人的下一个坐标），之后将这个坐标进行类型判断，看看是否为地板或者目标，若是则can-move?方法返回true则表示小人可以向该方向进行移动。
+```
+if can-move? value mad-man/offset [
+				mad-man/offset: mad-man/offset + dir-to-pos value
+			]
+```
+
 # 6
-好了，给小人加上限制之后，小人就被关在了地图里了。emmmm，我们这个游戏叫做推箱子游戏。所以当然要加上箱子了。
+好了，给小人加上限制之后，小人就被关在了地图里了。对，我们这个游戏叫做推箱子游戏。所以当然要加上箱子了。
+```
+draw-boxes: has [bx pos pb][
+		foreach pos level-data/boxes [
+			pb: p1-to-p2 pos
+			append box-world/pane bx: make face![type: 'base size: 30x30 offset: pb image: box]
+			append boxes pb
+		]
+	]
+```
+从level-data中我们可以得到每一张地图中的boxes的坐标，之后我们将坐标转换一下，因为文件中存储方式为30x30大小的图片为一个坐标点的形式，而我们的图片中的逻辑判断是采用每一张图片左上角像素点的坐标来进行的（并且伴随有偏移）。而每一次循环的坐标我们将其存入一个block中以供之后使用。
+可使用如下方法进行坐标转换：
+```
+p1-to-p2: function [pos [pair!] /local yb xb pb][
+		xb: pos/x * 30 
+		yb: pos/y * 30 + 16 
+		pb: as-pair xb yb
+		pb 
+	]
+```
+
 # 7
 加入箱子后，我们此时应该想一下箱子的逻辑，即小人推箱子时，若下一个点是墙体则推不动，若下一个地点是空地，则可以推动。
+```
+b-pos: find boxes c-pos
+bp: index? b-pos 
+pb: bp + 2
+next-box: c-pos + dir-to-pos value 
+if all [can-move? value c-pos  next-is-box? next-box][
+	box-world/pane/:pb/offset: next-box
+	poke boxes bp box-world/pane/:pb/offset
+	mad-man/offset: c-pos
+] 
+
+next-is-box?: func[pos [pair!]][
+	either find boxes pos [return false][return true]
+]
+```
+从上面代码我们可以看出，首先拿到逻辑上操作键盘推动箱子后下一步的坐标位置，若这个位置是墙体，则不能进行移动；若是地板或者目标，则将箱子和小人的坐标按照键盘操作的方向进行移动，移动成功之后我们还不要忘了记得改变存储箱子的boxes中的箱子的位置坐标。好了，现在箱子可以移动起来了：gif
 # 8
 箱子可以推起来了！那么思考一下游戏胜利的方式便是将所有箱子移动到指定的目标点。所以此时加入箱子坐标与目标点重合时胜利的逻辑以及之后弹出关卡胜利窗口的功能。
+```
+check-win?: has [win? box a][
+		win?: yes 
+		foreach box boxes [
+			a: either find targets box [true][false]
+			win?: win? and a ]
+		win? 
+	]
+```
+逻辑很简单，只需要将目标block中的坐标和boxes中的坐标进行对比，若全部重合check-win?方法将返回true。
+好了，判断关卡胜利的逻辑已经写好了，此时我们应该写一下弹出窗口了：
+```
+alert-win: layout [
+		text center "you have done a good job" return 
+		pad 30x0 button "ok" [
+			unview 
+		]
+	]
+```
+以上两步都准备好之后想一下应该何时使用check-win?方法才比较好呢？应该是每一次移动箱子都判断一次。则我们将以下方法加入到7中的移动箱子的操作中:
+```
+if check-win? [
+					view/flags alert-win 'modal
+				]
+```
+以上view的refinement为flags设置为modal，其具体的功能是将该窗口设置成只有在关闭之后才能对其他的窗体进行操作，详细的可以查看red文档https://doc.red-lang.org/en/view.html#_window
+
+
 # 9
-好，第一关已经制作完毕，那么接下来我们应该加入更多的图片，想一想我们之前准备的关卡地图文件已经被读入了一个block里了，所以此时我们只需要将索引指向下一关卡即可使用red语言重新绘制关卡地图。
+好，第一关已经制作完毕，那么接下来我们应该加入更多的图片，想一想我们之前准备的关卡地图文件已经被读入了一个block里了，所以此时我们只需要将索引指向下一关卡（即level+1）使得level-data接收到下一关卡的数据即可重新绘制关卡地图。
+```
+level: level + 1
+init-world
+```
+我们可以将以上代码加入到8中的alert-win中的button按钮中，即点击OK按钮后将跳转到下一个关卡。仔细想一下，我们在跳转到下一个关卡的时候有哪些参数需要初始化？boxes
+,targets,以及box-world的子孙（这里box-world的前两个子孙(每个face的子孙存储在一个名为pane的block中)分别为map-img和mad-man,而之后便是每个地图中的box）都需要重新清除掉（这里使用clear方法），然后使用draw-map和draw-boxes方法重新绘制地图以及地图上的箱子。具体步骤如下:
+```
+init-world: func[][
+	system/view/auto-sync?: no
+	clear boxes 
+	clear targets 
+	clear skip box-world/pane 2
+	draw-map
+	draw-boxes
+	system/view/auto-sync?: yes 
+	]
+```
+有心的朋友可能会发现我们这里使用了system/view/auto-sync?，而这是什么呢，在这里其主要的作用是将view的自动同步显示关掉（若不关掉的话，我们在绘制地图的时候就会将地图绘制的过程都显示在窗口中，效率非常的低，有兴趣的朋友可以尝试一下），在绘制好地图以及箱子之后再将其开启（这个速度比不使用system/view/auto-sync?的速度提升了N倍，肉眼很难看清）。
+具体关于system/view/auto-sync?可查看文档。https://doc.red-lang.org/en/view.html#_realtime_vs_deferred_updating_a_id_realtime_vs_deferred_updating_a
+
+
 # 10
 此时已经完成了大部分的工作了，你可以操作小人推动箱子，并且在所有箱子与目标点重合的时候弹出关卡胜利窗口，当你点击确定的时候则自动跳到下一关卡。那么接下来的工作便是精装修啦！首先看到图片文件中小人的图片不止一个，也可以看到例子gif中小人的动作会随着时间的改变，方向的改变而切换。
 # 11 
