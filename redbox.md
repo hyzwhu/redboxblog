@@ -11,7 +11,7 @@ hello，大家好，我们直接切入正题，今天来讨论一下如何使用
 load-bin: func [file][reduce load decompress read/binary file]
 maps: load-bin %data1.txt.gz'
 ```
-
+## 1.1
 ok,我们先来看下如上的代码实现了什么功能。load-bin方法的主要步骤：
 
 1. 使用read/binary 方法将文件读取到red中来。
@@ -31,12 +31,47 @@ ok,我们先来看下如上的代码实现了什么功能。load-bin方法的主
     ...
 ]
 ```
-4. 以上是一个load之后的block片段，但是这个block只存在于形而不存在于神，需要使用reduce方法来执行这个block中的代码，使其成为真正的键对值形式。（其实此时你可以从上面的代码隐隐约约看到地图的轮廓）
+4. 以上是一个load之后的block片段，但是这个block只存在于形而不存在于神，需要使用reduce方法来执行这个block中的代码，使其成为真正的键对值形式的block。（其实此时你可以从上面的代码隐隐约约看到地图的轮廓）
+
+## 1.2
+```
+all-image: load %all-image.png
+extrat: function [offset [integer!] size [pair!]][
+		copy/part skip all-image offset size 
+	]
+	l1: extrat 0 30x30 
+    ...
+```
+以上通过对整张png图片进行裁剪以得到相应的图片。这里l1得到了小人向左方向时候的第一个动作图片。
+
 
 # 2 
 好，接下来我们就开始制作游戏了，在做游戏的过程中我们应该在大脑中有个具体的思路（第一步做什么，接下来做什么，之后做什么），很明显，我们首先应该做的就是绘制地图。
+```
+draw-map: has [tile lx ly][
+		map-img/rgb: black
+		level-data: maps/:level
+		level-txt/data: :level
+		best-move-txt/data: pick moves-file :level
+		for-pair pos 0x0 15x13 [
+			tile: 0
+			unless zero? tile: tile-type? pos [
+				if 3 = tile [
+					append targets pos * 30 + 0x20 
+				]
+				tile: decode-tile tile
+				change-image tile map-img pos * 30  
+			]
+		]
+	]
+```
+以上draw-map方法，主要思路是通过读取从第一步骤中得到的地图信息中具体的关卡信息存在level-data中，再初始化一块背景图片（这里是黑色的），使用for-pair方法循环地将小的图片（通过1.2中extrat得到的图片），这里指的主要是构成地图的墙，地板，目标图片。替换掉map-img图片相应坐标的图片，最后画出了地图。现在你可以看到绘制的地图如下所示：
+
 # 3 
 ok，通过上面的步骤我们已经可以看到地图已经出现了，那么我们此时可以加入小人了，从图片中抽取出小人的编码后将其显示在地图上。
+```
+man-pos: undo-man: mad-man/offset: level-data/start * 30 + 0x20
+```
 # 4 
 小人成功上图，此时应该是建立小人和键盘之间的联系，即使用上下左右键控制小人的移动。
 # 5
