@@ -116,7 +116,7 @@ change-image: function [src [image!] dst [image!] pos [pair!]][
 		]
 	]
 ```
-https://github.com/hyzwhu/redboxblog/blob/master/img%26gif/2.png
+（https://github.com/hyzwhu/redboxblog/blob/master/img%26gif/2.png)
 
 # 3 
 ok，通过上面的步骤我们已经可以看到地图已经出现了，那么我们此时可以加入小人了，从图片中抽取出小人的编码后将其显示在地图上。(因为小人的初始位置和地图相关，故而我们可以将以下位置添加到上面的2中的draw-map方法中)。	
