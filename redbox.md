@@ -1,8 +1,8 @@
 hello，大家好，我们直接切入正题，今天来讨论一下如何使用red语言制作一款简单的推箱子游戏。
 
-
-
 首先，我们来看下推箱子游戏。
+
+![1.gif](https://raw.githubusercontent.com/hyzwhu/redboxblog/master/image/1.gif)
 
 # 1
 看完之后想必大家以及对这个游戏有个大致的了解了。那么好的，我们开始进入准备环节，俗话说得好，巧妇难为无米之炊。我们接下来的准备工作便是选好关卡地图的设置文件以及人物的动作图片，墙，地，目标位置，箱子的图片。
@@ -117,6 +117,8 @@ change-image: function [src [image!] dst [image!] pos [pair!]][
 	]
 ```
 
+![2.png](https://raw.githubusercontent.com/hyzwhu/redboxblog/master/image/2.png)
+
 
 # 3 
 ok，通过上面的步骤我们已经可以看到地图已经出现了，那么我们此时可以加入小人了，从图片中抽取出小人的编码后将其显示在地图上。(因为小人的初始位置和地图相关，故而我们可以将以下位置添加到上面的2中的draw-map方法中)。	
@@ -124,6 +126,8 @@ ok，通过上面的步骤我们已经可以看到地图已经出现了，那么
 man-pos: undo-man: mad-man/offset: level-data/start * 30 + 0x20
 ```
 而这只是一个坐标，我们要想将小人显示在地图上还需要创建一个类型为window名为box-world的对象，并将map-img和mad-man作为box-world的儿子放入其中。这样我们就能在地图上看到小人了：
+
+![3.png](https://raw.githubusercontent.com/hyzwhu/redboxblog/master/image/3.png)
 
 # 4 
 小人成功上图，此时应该是建立小人和键盘之间的联系，即使用上下左右键控制小人的移动。此时应该设置好box-world中actors属性，如下代码所示：
@@ -152,7 +156,9 @@ dir-to-pos: func [value [word!]][
 	]
 ```
 以上turn方法中预留了小人移动逻辑的代码（如5中所提到的）。
-现在我们可以看到小人在地图上自由的穿梭了：（gif）
+现在我们可以看到小人在地图上自由的穿梭了：
+
+![4.gif](https://raw.githubusercontent.com/hyzwhu/redboxblog/master/image/4.gif)
 # 5
 可以看到小人以及能够在图上自由的移动了，那么接下来我们应该思考小人在地图上的移动是不是有限制的呢？答案是肯定的，小人在遇到墙体的时候是不能移动的。
 ```
@@ -211,7 +217,9 @@ next-is-box?: func[pos [pair!]][
 	either find boxes pos [return false][return true]
 ]
 ```
-从上面代码我们可以看出，首先拿到逻辑上操作键盘推动箱子后下一步的坐标位置，若这个位置是墙体，则不能进行移动；若是地板或者目标，则将箱子和小人的坐标按照键盘操作的方向进行移动，移动成功之后我们还不要忘了记得改变存储箱子的boxes中的箱子的位置坐标。好了，现在箱子可以移动起来了：gif
+从上面代码我们可以看出，首先拿到逻辑上操作键盘推动箱子后下一步的坐标位置，若这个位置是墙体，则不能进行移动；若是地板或者目标，则将箱子和小人的坐标按照键盘操作的方向进行移动，移动成功之后我们还不要忘了记得改变存储箱子的boxes中的箱子的位置坐标。好了，现在箱子可以移动起来了：
+
+![5.png](https://raw.githubusercontent.com/hyzwhu/redboxblog/master/image/5.gif)
 # 8
 箱子可以推起来了！那么思考一下游戏胜利的方式便是将所有箱子移动到指定的目标点。所以此时加入箱子坐标与目标点重合时胜利的逻辑以及之后弹出关卡胜利窗口的功能。
 ```
@@ -264,6 +272,7 @@ init-world: func[][
 有心的朋友可能会发现我们这里使用了system/view/auto-sync?，而这是什么呢，在这里其主要的作用是将view的自动同步显示关掉（若不关掉的话，我们在绘制地图的时候就会将地图绘制的过程都显示在窗口中，效率非常的低，有兴趣的朋友可以尝试一下），在绘制好地图以及箱子之后再将其开启（这个速度比不使用system/view/auto-sync?的速度提升了N倍，肉眼很难看清）。
 具体关于system/view/auto-sync?可查看文档。https://doc.red-lang.org/en/view.html#_realtime_vs_deferred_updating_a_id_realtime_vs_deferred_updating_a
 
+![6.gif](https://raw.githubusercontent.com/hyzwhu/redboxblog/master/image/6.gif)
 
 # 10
 此时已经完成了大部分的工作了，你可以操作小人推动箱子，并且在所有箱子与目标点重合的时候弹出关卡胜利窗口，当你点击确定的时候则自动跳到下一关卡。那么接下来的工作便是精装修啦！首先看到图片文件中小人的图片不止一个，也可以看到例子gif中小人的动作会随着时间的改变，方向的改变而切换。
@@ -290,6 +299,7 @@ map-img进行了一个小小的设置:
 ```
 map-img/rgb: black
 ```
+![7.gif](https://raw.githubusercontent.com/hyzwhu/redboxblog/master/image/7.gif)
 
 # 11 
 小人活了！可能你在玩的时候会想，前面的关卡都太简单了，要来一些有难度的。所以是不是应该加入直选关卡的功能呢？好！现在加入直选关卡的功能:
@@ -319,6 +329,8 @@ undo-man: mad-man/offset
 ```
 加入到turn方法中，只要一执行turn方法，则首先对以上两个变量进行初始化。
 ```undo-box```只有在盒子有移动的时候才会赋值给它。
+加入undo和goto按钮及功能之后：
+![9.gif](https://raw.githubusercontent.com/hyzwhu/redboxblog/master/image/9.gif)
 
 # 13
 上面的撤销功能只能撤销一步，那么若是多走了n步怎么办呢？那么我们只能重新开始该关卡了。重新初始化该关卡游戏即可。在```box-world```中添加：
@@ -355,8 +367,11 @@ is-best?: func [/local bt mt][
 	]
 ```
 3. level-txt 这个非常简单，只需要在```init-world```或者```draw-map```的时候在其中加入```level-txt/data: :level```即可。
-
+![10.gif](https://raw.githubusercontent.com/hyzwhu/redboxblog/master/image/10.gif)
+看看我们上面gif中最下面的状态栏即是实现后的结果。
 # 14 
 好了，完成了上面的步骤后我们便成功的使用red语言制作了一款简单的推箱子游戏了，游戏效果如下。
 
-可以看到当我们的箱子与目标点重合的时候会变成红色，那它是怎么实现的呢？有兴趣的朋友可以看一下源码或者自己实现（在%all-img.png文件中我们提供了红色箱子的图片）。
+![11.gif](https://raw.githubusercontent.com/hyzwhu/redboxblog/master/image/11.gif)
+
+可以看到当我们的箱子与目标点重合的时候会变成红色，那它是怎么实现的呢？有兴趣的朋友可以看一下源码(https://github.com/hyzwhu/redbox/tree/new1)或者自己实现（在%all-img.png文件中我们提供了红色箱子的图片）。
