@@ -65,7 +65,7 @@ draw-map: has [tile lx ly][
 		]
 	]
 ```
-以上draw-map方法，主要思路是通过读取从第一步骤中得到的地图信息中具体的关卡信息存在level-data中，再初始化一块背景图片（这里是黑色的），使用for-pair方法
+以上draw-map方法，主要思路是通过读取从第一步骤中得到的地图信息中具体的关卡信息存在level-data中，再初始化一块背景图片（这里是黑色的），使用for-pair方法
 ```
 for-pair: function [
 		'word 	[word!]
@@ -329,7 +329,8 @@ undo-man: mad-man/offset
 ```
 加入到turn方法中，只要一执行turn方法，则首先对以上两个变量进行初始化。
 ```undo-box```只有在盒子有移动的时候才会赋值给它。
-加入undo和goto按钮及功能之后：
+加入undo和goto按钮及功能之后:
+
 ![9.gif](https://raw.githubusercontent.com/hyzwhu/redboxblog/master/image/9.gif)
 
 # 13
