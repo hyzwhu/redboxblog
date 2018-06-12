@@ -42,7 +42,7 @@ extrat: function [offset [integer!] size [pair!]][
 	l1: extrat 0 30x30 
     ...
 ```
-以上通过对整张png图片进行裁剪以得到相应的图片。这里l1得到了小人向左方向时候的第一个动作图片。
+以上通过对整张png图片进行裁剪以得到相应的图片。这里l1得到了小人向左方向时候的第一个动作图片。
 
 
 # 2 
@@ -266,13 +266,96 @@ init-world: func[][
 
 # 10
 此时已经完成了大部分的工作了，你可以操作小人推动箱子，并且在所有箱子与目标点重合的时候弹出关卡胜利窗口，当你点击确定的时候则自动跳到下一关卡。那么接下来的工作便是精装修啦！首先看到图片文件中小人的图片不止一个，也可以看到例子gif中小人的动作会随着时间的改变，方向的改变而切换。
+看了一下图片你会发现每一个方向都会有两张图片，所以我们可以使用一个block在每一次方向变换时在其中加入该指定方向的图片。只需要对方向选择的时候进行一些改造：
+```
+switch event/key [
+		up [poke man-img 1 u1 poke man-img 2 u2 turn 'up ]
+		down [poke man-img 1 d1 poke man-img 2 d2 turn 'down]
+		left [poke man-img 1 l1 poke man-img 2 l2 turn 'left]
+		right [poke man-img 1 r1 poke man-img 2 r2 turn 'right]
+        ]
+```
+其中```poke man-img 1 u1```可以直接使用```man-img/1: u1```替代。
+那如何让小人能够动起来呢？答案如下：
+```
+mad-man: base 30x30 rate 10  on-time [
+			judge: not judge
+			mad-man/image: pick man-img judge
+		]  
+```
+我们可以将box-world中的mad-man改变为以上形式。(详细)
+好了，现在我们的小人可以动起来了。噢，此时你可能发现我们的地图背景颜色变成黑色了，没事，这只是对
+map-img进行了一个小小的设置:
+```
+map-img/rgb: black
+```
+
 # 11 
-小人活了！可能你在玩的时候会想，前面的关卡都太简单了，要来一些有难度的。所以是不是应该加入直选关卡的功能呢？好！现在加入直选关卡的功能。
+小人活了！可能你在玩的时候会想，前面的关卡都太简单了，要来一些有难度的。所以是不是应该加入直选关卡的功能呢？好！现在加入直选关卡的功能:
+```
+level-choose: layout [
+		text "please enter the level that you what" return
+		pad 30x0 fld: field 40x20 return 
+		button "ok" [
+			level: to-integer fld/text
+			init-world
+			unview]
+	] 
+```
+当level-choose窗口弹出的之后，你需要在按下“ok”按钮时完成level的切换以及地图的初始化工作。
+当然，我们还需要在主窗口中加入goto按钮不是嘛.
+```
+box-world: layout/tight [
+	at 0x0 button "goto" bold 30x16 [view level-choose ]
+]
+```
 # 12 
-可能你会在玩的时候由于操作太快刹不了车了，多走出了一步怎么办？没关系我们可以加上undo即撤销功能。看下功能如何实现，即每一步键盘操作小人的时候都将上一步的小人和箱子的坐标记录到block里面，当然你也可以分开记录（这只是一种存储手段）。
+可能你会在玩的时候由于操作太快刹不了车了，多走出了一步怎么办？没关系我们可以加上undo即撤销功能。看下功能如何实现，即每一步键盘操作小人的时候都将上一步的小人和箱子的坐标记录下来。我们这里采用了分开记录的方法。
+将
+```		
+undo-box: 0x0
+undo-man: mad-man/offset
+```
+加入到turn方法中，只要一执行turn方法，则首先对以上两个变量进行初始化。
+```undo-box```只有在盒子有移动的时候才会赋值给它。
+
 # 13
-上面的撤销功能只能撤销一步，那么若是多走了n步怎么办呢？那么我们只能重新开始该关卡了。重新开始即重新读入图片指定的关卡位置即可。
-#14 
-单纯是完成游戏太没有挑战性了！于是乎我们注意到了例子gif中的最下面的那一行状态栏，加入当前步数（这里指的是箱子移动的步数）。加入最佳步数（即移动的最少的步数）。加入当前关卡的索引。
+上面的撤销功能只能撤销一步，那么若是多走了n步怎么办呢？那么我们只能重新开始该关卡了。重新初始化该关卡游戏即可。在```box-world```中添加：
+```
+at 60x0 button "retry" bold 30x16 [init-world]
+```
+搞定。
+单纯是完成游戏太没有挑战性了！于是乎我们注意到了例子gif中的最下面的那一行状态栏，加入当前步数（这里指的是箱子移动的步数）。加入最佳步数（即移动的最少的步数,也是指箱子移动的步数）。加入当前关卡的等级数。
+我们在```box-world```中加入：
+```
+at 0x405  text 70x30 black font-size 10 font-color white bold "your move:"
+at 70x405 move-txt: text 15x30 black font-size 10 font-color white bold "0"
+at 85x405 text 70x30 black font-size 10 font-color white bold "best move:"
+at 150x405 best-move-txt: text 15x30 black font-size 10 font-color white bold "0"
+at 165x405 text 70x30 black font-size 10 font-color white bold "your level:"
+at 230x405 level-txt: text 15x30 black font-size 10 font-color white bold "1"
+```
+(以上统一的text属性代码我们会在后期优化的时候采用style替代)
+加入以上状态栏之后，我们还需要在move-txt，best-move-txt,level-txt需要改变时对其进行值变换。
+1. move-txt 只需要在箱子移动的时候加入就可以了。
+2. best-move-txt 我们则采用了一个文件%moves.ini来记录其最好成绩的记录，在每一次开始游戏的时候将%moves.ini文件读入，并在每一次关卡结束时候使用如下方法进行对比，若是比之前的成绩要好则将本次成绩替换掉原来的最佳成绩并写入到%moves.ini文件中。
+```
+is-best?: func [/local bt mt][
+	mt: move-txt/data 
+	bt: best-move-txt/data
+	either bt = 0 [
+		poke moves-file level mt
+	][
+		if bt > mt [
+			poke moves-file level mt 
+		]
+	]
+	write %moves.ini mold moves-file
+	]
+```
+3. level-txt 这个非常简单，只需要在```init-world```或者```draw-map```的时候在其中加入```level-txt/data: :level```即可。
+
 #15 
-好了，完成了上面的步骤后我们便成功的使用red语言制作了一款简单的推箱子游戏了，可谓是居家旅行必备良品啊！
+好了，完成了上面的步骤后我们便成功的使用red语言制作了一款简单的推箱子游戏了，游戏效果如下。
+
+可以看到当我们的箱子与目标点重合的时候会变成红色，那它是怎么实现的呢？有兴趣的朋友可以看一下源码或者自己实现（在%all-img.png文件中我们提供了红色箱子的图片）。
