@@ -117,8 +117,6 @@ change-image: function [src [image!] dst [image!] pos [pair!]][
 	]
 ```
 
-![image]
-[https://github.com/hyzwhu/redboxblog/blob/master/img%26gif/2.png]
 
 # 3 
 ok，通过上面的步骤我们已经可以看到地图已经出现了，那么我们此时可以加入小人了，从图片中抽取出小人的编码后将其显示在地图上。(因为小人的初始位置和地图相关，故而我们可以将以下位置添加到上面的2中的draw-map方法中)。	
@@ -358,7 +356,7 @@ is-best?: func [/local bt mt][
 ```
 3. level-txt 这个非常简单，只需要在```init-world```或者```draw-map```的时候在其中加入```level-txt/data: :level```即可。
 
-#15 
+# 14 
 好了，完成了上面的步骤后我们便成功的使用red语言制作了一款简单的推箱子游戏了，游戏效果如下。
 
 可以看到当我们的箱子与目标点重合的时候会变成红色，那它是怎么实现的呢？有兴趣的朋友可以看一下源码或者自己实现（在%all-img.png文件中我们提供了红色箱子的图片）。
