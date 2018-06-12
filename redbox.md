@@ -374,4 +374,5 @@ is-best?: func [/local bt mt][
 
 ![11.gif](https://raw.githubusercontent.com/hyzwhu/redboxblog/master/image/11.gif)
 
-可以看到当我们的箱子与目标点重合的时候会变成红色，那它是怎么实现的呢？有兴趣的朋友可以看一下源码(https://github.com/hyzwhu/redbox/tree/new1)或者自己实现（在%all-img.png文件中我们提供了红色箱子的图片）。
+可以看到当我们的箱子与目标点重合的时候会变成红色，那它是怎么实现的呢？有兴趣的朋友可以看一下源码https://github.com/hyzwhu/redbox/tree/new1
+或者自己实现（在%all-img.png文件中我们提供了红色箱子的图片）。
