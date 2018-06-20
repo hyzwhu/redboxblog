@@ -16,9 +16,9 @@ hello，大家好，我们直接切入正题，今天来讨论一下如何使用
 
 1. 使用read/binary 方法将文件读取进来。
 
-2. 使用decompress解压缩方法将该文件（这里提供的是.gz压缩文件）解压缩。
+2. 使用decompress解压缩方法将该文件（因为这里提供的是.gz压缩文件）解压缩。
 
-3. 使用load方法将decompress出来的二进制码转换成block：
+3. 使用load方法将decompress出来的二进制码转换成block类型，得到如下：
 
 ```
 [
@@ -46,17 +46,17 @@ hello，大家好，我们直接切入正题，今天来讨论一下如何使用
 ]
 ```
 
-以上是一个load之后的block片段，但是这个block只存在于形而不存在于神，需要使用reduce方法来执行这个block中的代码，使其成为真正的键对值形式的block。（其实此时你可以从上面的编码中隐隐约约看到地图的轮廓）
+以上是一个load之后的block片段，但是这个block只存在于形而不存在于神，需要使用reduce方法来执行这个block中的代码，使其成为真正的键对值形式的block。（其实此时你可以从上面的编码中隐隐约约看到地图的轮廓，我们也可以分析一下这个对象中存储的属性，start即是小人的初始位置，boxes则是关卡中的箱子的初始位置，map则是这个关卡的地图设置（其中00是空，01，02，03分别代表了墙，地，目标），其实知道了这些之后你也可以设计自己的地图，然后存储形式像如上block中的对象就可以了）。
 
 ## 1.2
 
 ![p2.png](https://raw.githubusercontent.com/hyzwhu/redboxblog/master/image/p2.png)
 
-以上文件存储了所有的图片。
+以上all-image.png文件存储了所有的图片。
 
 ![p3.png](https://raw.githubusercontent.com/hyzwhu/redboxblog/master/image/p3.png)
 
-可以看到%all-image.png中存储了我们这个游戏中需要的所有的图片（至于为什么要这样做而不是将其分成一个一个的图片呢？这样在读取图片的时候岂不是方便很多？但是我们这里将其压成了一张图片，主要是为了减小空间。）。我们将其load进到all-image参数中。
+可以看到%all-image.png中存储了我们这个游戏中需要的所有的图片（至于为什么要这样做而不是将其分成一个一个的图片呢？这样在读取图片的时候岂不是方便很多？但是我们这里将其压成了一张图片，主要是为了减小空间。）。我们将其load进到all-image变量中。
 那么此时问题来了，我们要如何从这个大图片中得到我们要用的一个一个的小图片呢？这里我可以首先告诉你图片的大小是30x30的。然后拿起你手中的red，敲入```help copy```，可以得到：
 
 ![p4.png](https://raw.githubusercontent.com/hyzwhu/redboxblog/master/image/p4.png)
@@ -138,11 +138,9 @@ change-image: function [src [image!] dst [image!] pos [pair!]][
 
 # 3 
 
-ok，通过上面的步骤我们已经可以看到地图已经出现了，那么我们此时可以加入小人了，从图片中抽取出小人的编码后将其显示在地图上。(因为小人的初始位置和地图相关，故而我们可以将以下位置添加到上面的2中的draw-map方法中)。
+ok，通过上面的步骤我们已经可以看到地图已经出现了，那么我们此时可以加入小人了，从图片中抽取出小人的图片后将其显示在地图上。
 
-```
-man-pos: mad-man/offset: level-data/start * 30 + 0x20
-```
+因为小人的初始位置和地图相关，故而我们需要将小人的位置在每一次画地图操作时读取到出来以供之后移动小人操作的时候使用
 
 而这只是一个坐标，我们要想将小人显示在地图上还需要创建一个类型为window名为box-world的对象，并将map-img和mad-man作为box-world的儿子放入其中。
 
@@ -154,15 +152,7 @@ box-world: layout [
 ```
 
 之后
-
-```
-start-rebox: function [][
-		draw-map
-		view box-world
-	]
-
-	start-rebox
-```
+```view box-world```
 
 即可。
 
@@ -178,10 +168,10 @@ start-rebox: function [][
 box-world/actors: make object! [
     on-key-down: func [face [object!] event [event!]][
         switch event/key [
-            up [turn 'up]
-            down [turn 'down]
-            left [turn 'left]
-            right [turn 'right]
+		up [turn 'up]
+		down [turn 'down]
+		left [turn 'left]
+		right [turn 'right]
         	]
     	]
 	]
@@ -323,7 +313,7 @@ undo-man: mad-man/offset
 
 加入以上状态栏之后，我们还需要在move-txt，best-move-txt,level-txt需要改变时对其值进行变换。、
 
-1. move-txt 只需要在箱子移动的时候加入就可以了。
+1. move-txt 只需要在箱子移动的时候进行值的改变（这里指+1）就可以了。
 
 2. best-move-txt 我们则采用了一个文件%moves.ini（这里文件名不重要，你可以随意使用一个txt文件来记录，只要形式是包含了100个元素的block就行了，其中每个元素对应每个关卡的最好成绩。）来记录其最好成绩的记录，在每一次开始游戏的时候将%moves.ini文件读入，并在每一次关卡结束时候使用如下方法进行对比，若是比之前的成绩要好则将本次成绩替换掉原来的最佳成绩并写入到%moves.ini文件中。
 
