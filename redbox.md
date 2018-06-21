@@ -66,7 +66,7 @@ Hello，大家好，我们直接切入正题，今天来讨论一下如何使用
 			#{00000000000000000000000000000000} 
 			#{00000000000000000000000000000000}
 		]
-]
+	]	
     ...
 ]
 ```
@@ -98,7 +98,7 @@ Hello，大家好，我们直接切入正题，今天来讨论一下如何使用
 ```
 extract: function [offset [integer!] size [pair!]][
 		copy/part skip all-image offset size 
-	]
+]
 ```
 
 每一次只要给定想要的图片在all-image中的偏移值和图片大小就可以得到想要的图片了。
@@ -122,19 +122,18 @@ for-pair: function [
 		/local
 		do-body
 		val 
-	][
-		do-body: func reduce [word] body
-		val: start 
-		while [val/y <= end/y][
-			val/x: start/x
-			while [val/x <= end/x][
-				do-body val 
-				val/x: val/x + 1 
-			]
-			val/y: val/y + 1
+][
+	do-body: func reduce [word] body
+	val: start 
+	while [val/y <= end/y][
+		val/x: start/x
+		while [val/x <= end/x][
+			do-body val 
+			val/x: val/x + 1 
 		]
+		val/y: val/y + 1
 	]
-
+]
 ```
 
 循环地将小的图片（通过1.2中extrat得到的图片），这里指的主要是构成地图的墙，地板，目标图片。替换掉map-img图片相应坐标的图片，具体的思路是使用tile-type？方法对每次循环对应的坐标类型进行判断。
@@ -143,7 +142,7 @@ for-pair: function [
 tile-type?: function [pos [pair!]][
 		pos: pos + 1x1
 		to-integer pick pick level-data/map pos/y pos/x
-	]
+]
 ```
 
 之后使用change-image方法将选择到的小图片（或是墙或是地板或是目标）覆盖掉大图片（draw-map中的map-img）中相应坐标的地方。
@@ -152,21 +151,21 @@ tile-type?: function [pos [pair!]][
 
 ```
 change-image: function [src [image!] dst [image!] pos [pair!]][
-		sx: src/size/x
-		dx: dst/size/x 
-		sy: src/size/y
-		px: pos/x
-		py: pos/y	
-		repeat y sy [
-			xs: y - 1 * sx  + 1 
-			xd: y + py - 1 * dx  + 1 + px 
-			repeat l sx [
-				dst/:xd: src/:xs
-				xd: xd + 1
-				xs: xs + 1
-			] 
-		]
+	sx: src/size/x
+	dx: dst/size/x 
+	sy: src/size/y
+	px: pos/x
+	py: pos/y	
+	repeat y sy [
+		xs: y - 1 * sx  + 1 
+		xd: y + py - 1 * dx  + 1 + px 
+		repeat l sx [
+			dst/:xd: src/:xs
+			xd: xd + 1
+			xs: xs + 1
+		] 
 	]
+]
 ```
 
 下图是绘制的第一百关的关卡地图：
@@ -188,7 +187,7 @@ ok，通过上面的步骤已经可以看到地图已经出现了，那么此时
 box-world: layout [
 		at 0x16 bg: image map-img
 		at 0x16 mad-man: base 30x30 l1
-	]
+]
 ```
 
 之后
@@ -208,13 +207,13 @@ box-world: layout [
 box-world/actors: make object! [
     on-key-down: func [face [object!] event [event!]][
         switch event/key [
-		up [turn 'up]
-		down [turn 'down]
-		left [turn 'left]
-		right [turn 'right]
-        	]
-    	]
-	]
+			up [turn 'up]
+			down [turn 'down]
+			left [turn 'left]
+			right [turn 'right]
+        ]
+    ]
+]
 ```
 
 现在已经实现了判断键盘中上下左右键，此时应该加入对应的turn方法，读者可以想象一下，小人在移动的时候是不是每一次都会偏移30（因为小人图片的大小就是30x30），当其往上移动的时候只要给小人的偏移量的纵坐标减去30就可以了（因为起始坐标为0x0，若是向上则纵向偏移量就少了30），以此类推可以得到小人向左，向右，向下的方法。
@@ -263,11 +262,11 @@ box-world/actors: make object! [
 
 ```
 alert-win: layout [
-		text center "you have done a good job" return 
-		pad 30x0 button "ok" [
-			unview 
-		]
+	text center "you have done a good job" return 
+	pad 30x0 button "ok" [
+		unview 
 	]
+]
 ```
 
 在成功通关后调用以下来显示通关成功的窗口提示：
@@ -301,7 +300,7 @@ init-world: func[][
 	draw-map
 	draw-boxes
 	system/view/auto-sync?: yes 
-	]
+]
 ```
 
 有心的朋友可能会发现这里使用了system/view/auto-sync?，而这是什么呢，在这里其主要的作用是将view的自动同步显示关掉（若不关掉的话，在绘制地图的时候就会将地图绘制的过程都显示在窗口中，效率非常的低，有兴趣的读者可以尝试一下），在绘制好地图以及箱子之后再将其开启（这个速度比不使用system/view/auto-sync?的速度提升了N倍，肉眼很难看清）。
@@ -326,9 +325,9 @@ init-world: func[][
 
 ```
 mad-man: base 30x30 rate 10  on-time [
-			judge: not judge
-			mad-man/image: pick man-img judge
-		]  
+		judge: not judge
+		mad-man/image: pick man-img judge
+]  
 ```
 
 可以将box-world中的mad-man改变为以上形式。rate用于控制小人两个动作之间交换的频率，这里是10（当设置的越高，小人原地“动”的越快）。
